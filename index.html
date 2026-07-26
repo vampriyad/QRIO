@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QRIO</title>
+<meta name="description" content="A premium, in browser QR code generator. Design, customize, and export production-ready QR codes for links, Wi-Fi, contact cards, and more.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+
+:root{
+  --ink:#141414;
+  --ink-soft:#5B5A56;
+  --paper:#FAFAF8;
+  --paper-raised:#FFFFFF;
+  --panel:#F1F0EB;
+  --line:#E4E2DA;
+  --line-strong:#D2CFC3;
+  --gray:#87847C;
+  --accent:#3654FF;
+  --accent-strong:#2540DB;
+  --accent-soft:#EBEEFF;
+  --success:#128A62;
+  --success-soft:#E4F5EE;
+  --danger:#D64545;
+  --danger-soft:#FBEAEA;
+
+  --radius-sm:8px;
+  --radius-md:14px;
+  --radius-lg:26px;
+  --radius-pill:999px;
+
+  --font-display:'Bricolage Grotesque', sans-serif;
+  --font-body:'Inter', sans-serif;
+  --font-mono:'IBM Plex Mono', monospace;
+
+  --shadow-sm: 0 1px 2px rgba(20,20,20,.05), 0 1px 1px rgba(20,20,20,.03);
+  --shadow-md: 0 10px 30px -12px rgba(20,20,20,.18);
+  --shadow-lg: 0 24px 60px -20px rgba(20,20,20,.28);
+
+  --ease: cubic-bezier(.22,1,.36,1);
+  color-scheme: light;
+}
+
+[data-theme="dark"]{
+  --ink:#F3F2EE;
+  --ink-soft:#B7B4AC;
+  --paper:#101110;
+  --paper-raised:#191A18;
+  --panel:#1C1D1B;
+  --line:#2B2C29;
+  --line-strong:#3A3B37;
+  --gray:#8F8C84;
+  --accent:#6C82FF;
+  --accent-strong:#8497FF;
+  --accent-soft:#1B2040;
+  --success:#3FCB9B;
+  --success-soft:#12281F;
+  --danger:#F08A8A;
+  --danger-soft:#2E1919;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
+  --shadow-md: 0 10px 30px -12px rgba(0,0,0,.55);
+  --shadow-lg: 0 24px 70px -20px rgba(0,0,0,.65);
+  color-scheme: dark;
+}
+
+*,*::before,*::after{ box-sizing:border-box; }
+html{ scroll-behavior:smooth; }
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--font-body);
+  font-size:16px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  transition:background .35s var(--ease), color .35s var(--ease);
+}
+h1,h2,h3{ font-family:var(--font-display); margin:0; letter-spacing:-.01em; }
+p{ margin:0; }
+button{ font-family:inherit; }
+input,select,textarea{ font-family:inherit; font-size:15px; color:var(--ink); }
+a{ color:inherit; }
+::selection{ background:var(--accent); color:#fff; }
+
+:focus-visible{
+  outline:none;
+  box-shadow:0 0 0 2px var(--paper), 0 0 0 4.5px var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{
+    animation-duration:.001ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;
+    scroll-behavior:auto !important;
+  }
+}
+.nav{
+  position:sticky; top:0; z-index:40;
+  background:color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.nav__inner{
+  max-width:1180px; margin:0 auto; padding:16px 28px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.nav__brand{ display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--ink); }
+.nav__mark{ display:flex; color:var(--accent); }
+.nav__mark svg rect{ fill:currentColor; }
+.nav__word{ font-family:var(--font-display); font-weight:600; font-size:18px; letter-spacing:-.01em; }
+
+.theme-toggle{
+  width:38px; height:38px; border-radius:var(--radius-pill);
+  border:1px solid var(--line); background:var(--paper-raised);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; color:var(--ink-soft);
+  transition:border-color .2s var(--ease), color .2s var(--ease), transform .15s var(--ease);
+}
+.theme-toggle:hover{ color:var(--ink); border-color:var(--line-strong); transform:translateY(-1px); }
+.theme-toggle svg{ fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+.theme-toggle .icon-moon{ display:none; }
+[data-theme="dark"] .theme-toggle .icon-sun{ display:none; }
+[data-theme="dark"] .theme-toggle .icon-moon{ display:block; }
+.hero{
+  position:relative;
+  padding:88px 28px 56px;
+  overflow:hidden;
+  text-align:center;
+}
+.hero__grid{
+  position:absolute; inset:0;
+  background-image:
+    radial-gradient(circle, var(--line-strong) 1.4px, transparent 1.4px);
+  background-size:26px 26px;
+  -webkit-mask-image:radial-gradient(ellipse 60% 55% at 50% 20%, #000 40%, transparent 85%);
+  mask-image:radial-gradient(ellipse 60% 55% at 50% 20%, #000 40%, transparent 85%);
+  opacity:.55;
+}
+.hero__inner{ position:relative; max-width:720px; margin:0 auto; }
+.eyebrow{
+  font-family:var(--font-mono);
+  font-size:12.5px;
+  letter-spacing:.06em;
+  color:var(--accent);
+  text-transform:uppercase;
+  margin-bottom:18px;
+  opacity:0;
+  animation:rise .7s var(--ease) .05s forwards;
+}
+.hero__title{
+  font-size:clamp(34px, 6vw, 60px);
+  font-weight:600;
+  line-height:1.06;
+  color:var(--ink);
+  opacity:0;
+  animation:rise .8s var(--ease) .12s forwards;
+}
+.hero__sub{
+  margin:20px auto 0;
+  max-width:480px;
+  font-size:16.5px;
+  color:var(--ink-soft);
+  opacity:0;
+  animation:rise .8s var(--ease) .22s forwards;
+}
+@keyframes rise{
+  from{ opacity:0; transform:translateY(14px); }
+  to{ opacity:1; transform:translateY(0); }
+}
+.studio{ padding:8px 28px 100px; }
+.studio__inner{ max-width:1180px; margin:0 auto; }
+
+.type-tabs{
+  display:flex; gap:8px; overflow-x:auto;
+  padding:6px 6px 18px;
+  margin-bottom:20px;
+  -ms-overflow-style:none; scrollbar-width:none;
+}
+.type-tabs::-webkit-scrollbar{ display:none; }
+.type-tab{
+  flex:0 0 auto;
+  display:flex; align-items:center; gap:8px;
+  padding:10px 16px;
+  border-radius:var(--radius-pill);
+  border:1px solid var(--line);
+  background:var(--paper-raised);
+  color:var(--ink-soft);
+  font-size:14px; font-weight:500;
+  cursor:pointer;
+  transition:all .2s var(--ease);
+}
+.type-tab svg{ fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; width:16px; height:16px; }
+.type-tab:hover{ border-color:var(--line-strong); color:var(--ink); transform:translateY(-1px); }
+.type-tab[aria-selected="true"]{
+  background:var(--ink); border-color:var(--ink); color:var(--paper);
+}
+[data-theme="dark"] .type-tab[aria-selected="true"]{ background:var(--accent); border-color:var(--accent); color:#0c0e1a; }
+
+.studio__grid{
+  display:grid;
+  grid-template-columns:1.15fr .85fr;
+  gap:28px;
+  align-items:start;
+}
+@media (max-width:920px){
+  .studio__grid{ grid-template-columns:1fr; }
+}
+.panel{ display:flex; flex-direction:column; gap:18px; }
+
+.field-card{
+  background:var(--paper-raised);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  padding:26px;
+  box-shadow:var(--shadow-sm);
+}
+.field-card__title{
+  font-size:19px; font-weight:600; margin-bottom:18px;
+}
+.field-card__fields{ display:flex; flex-direction:column; gap:14px; }
+
+.field{ display:flex; flex-direction:column; gap:6px; }
+.field label{ font-size:13px; font-weight:500; color:var(--ink-soft); }
+.field input[type="text"],
+.field input[type="url"],
+.field input[type="email"],
+.field input[type="tel"],
+.field select,
+.field textarea{
+  width:100%;
+  padding:11px 13px;
+  border-radius:var(--radius-sm);
+  border:1px solid var(--line);
+  background:var(--panel);
+  color:var(--ink);
+  transition:border-color .18s var(--ease), background .18s var(--ease), box-shadow .18s var(--ease);
+}
+.field textarea{ min-height:84px; resize:vertical; line-height:1.45; }
+.field input:focus,
+.field select:focus,
+.field textarea:focus{
+  outline:none; border-color:var(--accent); background:var(--paper-raised);
+  box-shadow:0 0 0 3px var(--accent-soft);
+}
+.field input::placeholder,
+.field textarea::placeholder{ color:var(--gray); }
+.field-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+@media (max-width:520px){ .field-row{ grid-template-columns:1fr; } }
+
+.checkbox-inline{ display:flex; align-items:center; gap:9px; font-size:14px; color:var(--ink-soft); }
+.checkbox-inline input{ width:16px; height:16px; accent-color:var(--accent); }
+.accordion{ display:flex; flex-direction:column; gap:10px; }
+.accordion__item{
+  background:var(--paper-raised);
+  border:1px solid var(--line);
+  border-radius:var(--radius-md);
+  overflow:hidden;
+}
+.accordion__trigger{
+  width:100%;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 20px;
+  background:none; border:none;
+  font-size:15px; font-weight:500; color:var(--ink);
+  cursor:pointer;
+}
+.accordion__trigger .chev{
+  fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;
+  color:var(--gray);
+  transition:transform .3s var(--ease);
+}
+.accordion__item[data-open="true"] .chev{ transform:rotate(180deg); }
+.accordion__panel{
+  display:grid;
+  grid-template-rows:0fr;
+  transition:grid-template-rows .32s var(--ease);
+}
+.accordion__item[data-open="true"] .accordion__panel{ grid-template-rows:1fr; }
+.accordion__panel-inner{ overflow:hidden; min-height:0; }
+.accordion__item[data-open="true"] .accordion__panel-inner{ overflow:visible; }
+.accordion__panel > .accordion__panel-inner{
+  padding:0 20px 20px;
+  display:flex; flex-direction:column; gap:16px;
+}
+
+.control-row{
+  display:grid;
+  grid-template-columns:110px 1fr auto;
+  align-items:center;
+  gap:12px;
+}
+.control-row--stack{ grid-template-columns:1fr; gap:10px; }
+.control-label{ font-size:13.5px; color:var(--ink-soft); font-weight:500; }
+.range-value{
+  font-family:var(--font-mono); font-size:12px; color:var(--gray); text-align:right; min-width:56px;
+}
+input[type="range"]{
+  -webkit-appearance:none; appearance:none;
+  width:100%; height:4px; border-radius:2px;
+  background:var(--line-strong);
+  cursor:pointer;
+}
+input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:16px; height:16px; border-radius:50%;
+  background:var(--accent); border:2px solid var(--paper-raised);
+  box-shadow:0 0 0 1px var(--accent);
+  cursor:pointer;
+  transition:transform .15s var(--ease);
+}
+input[type="range"]::-webkit-slider-thumb:hover{ transform:scale(1.15); }
+input[type="range"]::-moz-range-thumb{
+  width:14px; height:14px; border-radius:50%; border:2px solid var(--paper-raised);
+  background:var(--accent); box-shadow:0 0 0 1px var(--accent); cursor:pointer;
+}
+
+.color-field{ display:flex; align-items:center; gap:8px; }
+.color-field input[type="color"]{
+  -webkit-appearance:none; appearance:none;
+  width:34px; height:34px; padding:0; border:1px solid var(--line); border-radius:9px;
+  background:none; cursor:pointer;
+}
+.color-field input[type="color"]::-webkit-color-swatch-wrapper{ padding:2px; }
+.color-field input[type="color"]::-webkit-color-swatch{ border:none; border-radius:6px; }
+.hex-input{
+  font-family:var(--font-mono); font-size:13px;
+  width:90px; padding:8px 10px; border-radius:var(--radius-sm);
+  border:1px solid var(--line); background:var(--panel); color:var(--ink);
+  text-transform:uppercase;
+}
+.hex-input:focus{ outline:none; border-color:var(--accent); background:var(--paper-raised); }
+
+.checkbox-row{ display:flex; align-items:center; gap:10px; font-size:14px; color:var(--ink-soft); cursor:pointer; }
+.checkbox-row input{ width:16px; height:16px; accent-color:var(--accent); cursor:pointer; }
+
+.swatch-group{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
+.swatch-group--4{ grid-template-columns:repeat(4, 1fr); }
+.swatch{
+  display:flex; flex-direction:column; align-items:center; gap:6px;
+  padding:12px 6px 10px;
+  border-radius:var(--radius-sm);
+  border:1px solid var(--line);
+  background:var(--panel);
+  cursor:pointer; color:var(--ink-soft);
+  transition:all .16s var(--ease);
+}
+.swatch:hover{ border-color:var(--line-strong); color:var(--ink); }
+.swatch[aria-pressed="true"]{
+  border-color:var(--accent); background:var(--accent-soft); color:var(--accent); font-weight:600;
+}
+.swatch__glyph{ width:26px; height:26px; display:flex; align-items:center; justify-content:center; }
+.swatch__label{ font-size:11px; }
+
+.logo-upload{
+  border:1.5px dashed var(--line-strong);
+  border-radius:var(--radius-md);
+  padding:18px;
+  display:flex; align-items:center; justify-content:center;
+  min-height:88px;
+  cursor:pointer;
+  transition:border-color .2s var(--ease), background .2s var(--ease);
+}
+.logo-upload:hover{ border-color:var(--accent); background:var(--accent-soft); }
+.logo-upload__empty{ display:flex; flex-direction:column; align-items:center; gap:8px; color:var(--gray); font-size:13px; }
+.logo-upload__empty svg{ fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+.logo-upload__filled{ display:flex; align-items:center; gap:14px; }
+.logo-upload__filled img{ width:46px; height:46px; object-fit:contain; border-radius:8px; background:var(--paper-raised); border:1px solid var(--line); }
+.text-btn{
+  background:none; border:none; color:var(--danger); font-size:13px; font-weight:500; cursor:pointer; padding:0;
+}
+.hint{ font-size:12.5px; color:var(--gray); line-height:1.5; }
+.preview{ position:sticky; top:96px; display:flex; flex-direction:column; gap:14px; }
+@media (max-width:920px){ .preview{ position:static; } }
+
+.preview__card{
+  background:var(--paper-raised);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  padding:28px;
+  box-shadow:var(--shadow-md);
+  display:flex; align-items:center; justify-content:center;
+}
+
+.scanner{
+  position:relative;
+  padding:22px;
+  display:flex; align-items:center; justify-content:center;
+  border-radius:var(--radius-md);
+  background:
+    linear-gradient(0deg, transparent 0, transparent 100%);
+}
+.scanner__stage{
+  border-radius:10px;
+  overflow:hidden;
+  line-height:0;
+  background:repeating-conic-gradient(var(--panel) 0% 25%, transparent 0% 50%) 0 0/16px 16px;
+}
+.scanner__stage canvas, .scanner__stage svg{ display:block; max-width:100%; height:auto; }
+
+.scanner__bracket{
+  position:absolute; width:26px; height:26px;
+  border:2.5px solid var(--accent);
+  opacity:.85;
+}
+.scanner__bracket--tl{ top:0; left:0; border-right:none; border-bottom:none; border-top-left-radius:8px; }
+.scanner__bracket--tr{ top:0; right:0; border-left:none; border-bottom:none; border-top-right-radius:8px; }
+.scanner__bracket--bl{ bottom:0; left:0; border-right:none; border-top:none; border-bottom-left-radius:8px; }
+.scanner__bracket--br{ bottom:0; right:0; border-left:none; border-top:none; border-bottom-right-radius:8px; }
+
+.scanner__line{
+  position:absolute; left:14px; right:14px; top:14px; height:2px;
+  background:linear-gradient(90deg, transparent, var(--accent) 20%, var(--accent) 80%, transparent);
+  box-shadow:0 0 10px 1px var(--accent);
+  opacity:0;
+  pointer-events:none;
+}
+.scanner.is-scanning .scanner__line{
+  animation:scan-sweep .9s var(--ease);
+}
+@keyframes scan-sweep{
+  0%{ opacity:0; top:14px; }
+  10%{ opacity:1; }
+  85%{ opacity:1; }
+  100%{ opacity:0; top:calc(100% - 16px); }
+}
+
+.btn-copy{
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  width:100%;
+  padding:11px 14px;
+  border-radius:var(--radius-sm);
+  border:1px solid var(--line);
+  background:var(--panel);
+  color:var(--ink-soft);
+  font-size:13.5px; font-weight:500;
+  cursor:pointer;
+  transition:all .18s var(--ease);
+}
+.btn-copy svg{ fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+.btn-copy:hover{ border-color:var(--line-strong); color:var(--ink); }
+.btn-copy.is-copied{ border-color:var(--success); color:var(--success); background:var(--success-soft); }
+
+.export-row{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
+
+.btn{
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  padding:12px 16px;
+  border-radius:var(--radius-sm);
+  font-size:14px; font-weight:600;
+  border:1px solid transparent;
+  cursor:pointer;
+  transition:transform .15s var(--ease), box-shadow .2s var(--ease), background .18s var(--ease), border-color .18s var(--ease);
+}
+.btn svg{ fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+.btn:active{ transform:scale(.97); }
+.btn--primary{ background:var(--ink); color:var(--paper); }
+.btn--primary:hover{ box-shadow:var(--shadow-md); transform:translateY(-1px); }
+[data-theme="dark"] .btn--primary{ background:var(--accent); color:#0c0e1a; }
+.btn--ghost{ background:var(--panel); color:var(--ink); border-color:var(--line); }
+.btn--ghost:hover{ border-color:var(--line-strong); transform:translateY(-1px); }
+.btn--outline{ background:transparent; color:var(--ink); border-color:var(--line-strong); }
+.btn--outline:hover{ background:var(--panel); }
+.btn--text{ background:none; color:var(--gray); font-weight:500; padding:6px; }
+.btn--text:hover{ color:var(--ink); }
+.btn--full{ width:100%; }
+
+.footer{ border-top:1px solid var(--line); padding:26px 28px 40px; }
+.footer__inner{ max-width:1180px; margin:0 auto; font-size:13px; color:var(--gray); text-align:center; }
+
+.toast-container{
+  position:fixed; bottom:22px; left:50%; transform:translateX(-50%);
+  display:flex; flex-direction:column; gap:8px;
+  z-index:100;
+  align-items:center;
+}
+.toast{
+  display:flex; align-items:center; gap:10px;
+  padding:12px 18px;
+  border-radius:var(--radius-pill);
+  background:var(--ink);
+  color:var(--paper);
+  font-size:13.5px; font-weight:500;
+  box-shadow:var(--shadow-lg);
+  animation:toast-in .35s var(--ease);
+}
+[data-theme="dark"] .toast{ background:var(--paper-raised); border:1px solid var(--line-strong); color:var(--ink); }
+.toast svg{ fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.toast.is-leaving{ animation:toast-out .28s var(--ease) forwards; }
+@keyframes toast-in{ from{ opacity:0; transform:translateY(10px) scale(.96); } to{ opacity:1; transform:translateY(0) scale(1); } }
+@keyframes toast-out{ to{ opacity:0; transform:translateY(6px) scale(.96); } }
+
+#printArea{ display:none; }
+@media print{
+  body *{ visibility:hidden; }
+  #printArea, #printArea *{ visibility:visible; }
+  #printArea{
+    display:flex; align-items:center; justify-content:center;
+    position:fixed; inset:0;
+  }
+  #printImage{ max-width:70%; max-height:70%; }
+}
+
+</style>
+</head>
+<body>
+<header class="nav">
+  <div class="nav__inner">
+    <a class="nav__brand" href="#top" aria-label="QR Studio home">
+      <span class="nav__mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22"><rect x="2" y="2" width="7" height="7" rx="1.5"/><rect x="15" y="2" width="7" height="7" rx="1.5"/><rect x="2" y="15" width="7" height="7" rx="1.5"/><rect x="15" y="15" width="3" height="3" rx="0.75"/><rect x="19" y="15" width="3" height="3" rx="0.75"/><rect x="15" y="19" width="3" height="3" rx="0.75"/><rect x="19" y="19" width="3" height="3" rx="0.75"/></svg>
+      </span>
+      <span class="nav__word">QR Studio</span>
+    </a>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle dark mode" aria-pressed="false">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M4.6 4.6l1.7 1.7M17.7 17.7l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.6 19.4l1.7-1.7M17.7 6.3l1.7-1.7"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5z"/></svg>
+    </button>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="hero__grid" aria-hidden="true"></div>
+    <div class="hero__inner">
+      <p class="eyebrow">No sign-up. No server. Just scan.</p>
+      <h1 class="hero__title">Create beautiful<br>QR codes in seconds.</h1>
+      <p class="hero__sub">Design, customize, and export production-ready QR codes for links, Wi-Fi, contact cards, and more — entirely in your browser.</p>
+    </div>
+  </section>
+  <section class="studio" id="generator">
+    <div class="studio__inner">
+      <nav class="type-tabs" id="typeTabs" aria-label="QR code content type"></nav>
+
+      <div class="studio__grid">
+        <div class="panel">
+
+          <div class="field-card">
+            <h2 class="field-card__title" id="formTitle">Website</h2>
+            <div class="field-card__fields" id="fieldsContainer"></div>
+          </div>
+
+          <div class="accordion" id="accordion">
+
+            <div class="accordion__item" data-open="true">
+              <button class="accordion__trigger" type="button" aria-expanded="true">
+                <span>Colors</span>
+                <svg class="chev" viewBox="0 0 24 24" width="16" height="16"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+              <div class="accordion__panel">
+                <div class="accordion__panel-inner">
+                  <div class="control-row">
+                    <label class="control-label" for="fgColor">Foreground</label>
+                    <div class="color-field">
+                      <input type="color" id="fgColor" value="#141414">
+                      <input type="text" id="fgColorHex" class="hex-input" value="#141414" maxlength="7" spellcheck="false">
+                    </div>
+                  </div>
+                  <div class="control-row">
+                    <label class="control-label" for="bgColor">Background</label>
+                    <div class="color-field">
+                      <input type="color" id="bgColor" value="#ffffff">
+                      <input type="text" id="bgColorHex" class="hex-input" value="#ffffff" maxlength="7" spellcheck="false">
+                    </div>
+                  </div>
+                  <label class="checkbox-row">
+                    <input type="checkbox" id="transparentBg">
+                    <span>Transparent background</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion__item">
+              <button class="accordion__trigger" type="button" aria-expanded="false">
+                <span>Style</span>
+                <svg class="chev" viewBox="0 0 24 24" width="16" height="16"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+              <div class="accordion__panel">
+                <div class="accordion__panel-inner">
+                  <div class="control-row control-row--stack">
+                    <span class="control-label">Module shape</span>
+                    <div class="swatch-group" id="moduleStyleGroup"></div>
+                  </div>
+                  <div class="control-row control-row--stack">
+                    <span class="control-label">Eye frame</span>
+                    <div class="swatch-group" id="eyeFrameGroup"></div>
+                  </div>
+                  <div class="control-row control-row--stack">
+                    <span class="control-label">Eye dot</span>
+                    <div class="swatch-group" id="eyeDotGroup"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion__item">
+              <button class="accordion__trigger" type="button" aria-expanded="false">
+                <span>Logo</span>
+                <svg class="chev" viewBox="0 0 24 24" width="16" height="16"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+              <div class="accordion__panel">
+                <div class="accordion__panel-inner">
+                  <div class="logo-upload" id="logoUpload">
+                    <input type="file" id="logoInput" accept="image/png,image/jpeg,image/svg+xml,image/webp" hidden>
+                    <div class="logo-upload__empty" id="logoEmptyState">
+                      <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+                      <span>Upload a logo</span>
+                    </div>
+                    <div class="logo-upload__filled" id="logoFilledState" hidden>
+                      <img id="logoPreviewImg" alt="Logo preview">
+                      <button type="button" class="text-btn" id="logoRemoveBtn">Remove</button>
+                    </div>
+                  </div>
+                  <div class="control-row" id="logoSizeRow" hidden>
+                    <label class="control-label" for="logoSize">Logo size</label>
+                    <input type="range" id="logoSize" min="15" max="45" value="28">
+                    <span class="range-value" id="logoSizeValue">28%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion__item">
+              <button class="accordion__trigger" type="button" aria-expanded="false">
+                <span>Size &amp; margin</span>
+                <svg class="chev" viewBox="0 0 24 24" width="16" height="16"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+              <div class="accordion__panel">
+                <div class="accordion__panel-inner">
+                  <div class="control-row">
+                    <label class="control-label" for="qrSize">QR size</label>
+                    <input type="range" id="qrSize" min="160" max="800" step="10" value="320">
+                    <span class="range-value" id="qrSizeValue">320 px</span>
+                  </div>
+                  <div class="control-row">
+                    <label class="control-label" for="qrMargin">Margin</label>
+                    <input type="range" id="qrMargin" min="0" max="40" step="1" value="16">
+                    <span class="range-value" id="qrMarginValue">16 px</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion__item">
+              <button class="accordion__trigger" type="button" aria-expanded="false">
+                <span>Error correction</span>
+                <svg class="chev" viewBox="0 0 24 24" width="16" height="16"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+              <div class="accordion__panel">
+                <div class="accordion__panel-inner">
+                  <div class="swatch-group swatch-group--4" id="errorCorrectionGroup"></div>
+                  <p class="hint" id="errorCorrectionHint">Higher levels stay scannable even if part of the code is covered — useful when adding a logo.</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <aside class="preview">
+          <div class="preview__card">
+            <div class="scanner" id="scanner">
+              <span class="scanner__bracket scanner__bracket--tl"></span>
+              <span class="scanner__bracket scanner__bracket--tr"></span>
+              <span class="scanner__bracket scanner__bracket--bl"></span>
+              <span class="scanner__bracket scanner__bracket--br"></span>
+              <span class="scanner__line" id="scannerLine"></span>
+              <div class="scanner__stage" id="qrCanvasHolder"></div>
+            </div>
+          </div>
+
+          <button class="btn-copy" id="copyBtn" type="button">
+            <svg viewBox="0 0 24 24" width="15" height="15"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
+            <span id="copyBtnLabel">Copy content</span>
+          </button>
+
+          <div class="export-row">
+            <button class="btn btn--primary" id="downloadPngBtn" type="button">PNG</button>
+            <button class="btn btn--ghost" id="downloadSvgBtn" type="button">SVG</button>
+            <button class="btn btn--ghost" id="downloadPdfBtn" type="button">PDF</button>
+          </div>
+          <button class="btn btn--outline btn--full" id="printBtn" type="button">
+            <svg viewBox="0 0 24 24" width="15" height="15"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2"/><rect x="6" y="14" width="12" height="7"/></svg>
+            Print
+          </button>
+          <button class="btn btn--text btn--full" id="newQrBtn" type="button">Start a new QR code</button>
+        </aside>
+
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="footer__inner">
+    <span>QR Studio — generated entirely in your browser. Nothing you enter is ever uploaded.</span>
+  </div>
+</footer>
+
+<div id="printArea"><img id="printImage" alt="QR code"></div>
+
+<div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.6.0-rc.1/lib/qr-code-styling.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+
+(function(){
+
+  const toastContainer = document.getElementById('toastContainer');
+
+  const ICONS = {
+    success:'<svg viewBox="0 0 24 24" width="16" height="16"><path d="M5 13l4 4L19 7"/></svg>',
+    error:'<svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>'
+  };
+
+  function toast(message, type){
+    if(!toastContainer) return;
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.innerHTML = (ICONS[type] || ICONS.success) + '<span></span>';
+    el.querySelector('span').textContent = message;
+    toastContainer.appendChild(el);
+    const remove = () => {
+      el.classList.add('is-leaving');
+      setTimeout(()=> el.remove(), 300);
+    };
+    setTimeout(remove, 2600);
+  }
+
+  function debounce(fn, wait){
+    let t;
+    return function(...args){
+      clearTimeout(t);
+      t = setTimeout(()=> fn.apply(this,args), wait);
+    };
+  }
+
+  const STORAGE_KEY = 'qrstudio:v1';
+  const THEME_KEY = 'qrstudio:theme';
+
+  function saveState(state){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }catch(e){
+      try{
+        const clone = JSON.parse(JSON.stringify(state));
+        if(clone.style) clone.style.logo = null;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(clone));
+      }catch(e2){ }
+    }
+  }
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    }catch(e){ return null; }
+  }
+
+  function saveTheme(theme){
+    try{ localStorage.setItem(THEME_KEY, theme); }catch(e){}
+  }
+  function loadTheme(){
+    try{ return localStorage.getItem(THEME_KEY); }catch(e){ return null; }
+  }
+
+  async function copyToClipboard(text){
+    if(navigator.clipboard && window.isSecureContext){
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+  function isValidHex(v){ return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v); }
+  function normalizeHex(v){
+    if(!v) return null;
+    v = v.trim();
+    if(v[0] !== '#') v = '#' + v;
+    if(!isValidHex(v)) return null;
+    if(v.length === 4){
+      v = '#' + [v[1],v[1],v[2],v[2],v[3],v[3]].join('');
+    }
+    return v.toLowerCase();
+  }
+
+  window.QRUtils = { toast, debounce, saveState, loadState, saveTheme, loadTheme, copyToClipboard, normalizeHex };
+})();
+
+(function(){
+
+  const icon = (paths) => `<svg viewBox="0 0 24 24">${paths}</svg>`;
+
+  const esc = (s) => (s || '').toString().replace(/([\\;,:"])/g, '\\$1');
+
+  const TYPE_CONFIGS = [
+    {
+      id:'url', label:'Website',
+      icon: icon('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>'),
+      fields:[
+        { id:'url', type:'url', label:'Website URL', placeholder:'https://example.com', default:'https://example.com' }
+      ],
+      build:(v) => (v.url || '').trim() || 'https://example.com'
+    },
+    {
+      id:'text', label:'Text',
+      icon: icon('<path d="M4 6h16M4 12h16M4 18h10"/>'),
+      fields:[
+        { id:'text', type:'textarea', label:'Plain text', placeholder:'Type anything you like…', default:'Hello, world!' }
+      ],
+      build:(v) => v.text || ''
+    },
+    {
+      id:'email', label:'Email',
+      icon: icon('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>'),
+      fields:[
+        { id:'to', type:'email', label:'Email address', placeholder:'name@company.com' },
+        { id:'subject', type:'text', label:'Subject (optional)', placeholder:'Let\u2019s talk' },
+        { id:'body', type:'textarea', label:'Message (optional)', placeholder:'' }
+      ],
+      build:(v) => {
+        let s = 'mailto:' + (v.to || '').trim();
+        const params = [];
+        if(v.subject) params.push('subject=' + encodeURIComponent(v.subject));
+        if(v.body) params.push('body=' + encodeURIComponent(v.body));
+        if(params.length) s += '?' + params.join('&');
+        return s;
+      }
+    },
+    {
+      id:'phone', label:'Phone',
+      icon: icon('<path d="M6.5 3h3l1.5 5-2 1.5a13 13 0 0 0 6.5 6.5l1.5-2 5 1.5v3a2 2 0 0 1-2.2 2A18 18 0 0 1 4.5 5.2 2 2 0 0 1 6.5 3z"/>'),
+      fields:[
+        { id:'phone', type:'tel', label:'Phone number', placeholder:'+1 555 000 0000' }
+      ],
+      build:(v) => 'tel:' + (v.phone || '').replace(/\s+/g,'')
+    },
+    {
+      id:'sms', label:'SMS',
+      icon: icon('<path d="M4 5h16v11H9l-5 4V5z"/>'),
+      fields:[
+        { id:'phone', type:'tel', label:'Phone number', placeholder:'+1 555 000 0000' },
+        { id:'message', type:'textarea', label:'Message (optional)', placeholder:'' }
+      ],
+      build:(v) => `SMSTO:${(v.phone || '').replace(/\s+/g,'')}:${v.message || ''}`
+    },
+    {
+      id:'wifi', label:'Wi-Fi',
+      icon: icon('<path d="M2 9a16 16 0 0 1 20 0M5.5 13a11 11 0 0 1 13 0M9 17a6 6 0 0 1 6 0"/><circle cx="12" cy="20.2" r="1" fill="currentColor" stroke="none"/>'),
+      fields:[
+        { id:'ssid', type:'text', label:'Network name (SSID)', placeholder:'MyHomeWiFi' },
+        { id:'password', type:'text', label:'Password', placeholder:'' },
+        { id:'encryption', type:'select', label:'Security', options:[['WPA','WPA / WPA2'],['WEP','WEP'],['nopass','None']], default:'WPA' },
+        { id:'hidden', type:'checkbox', label:'This is a hidden network' }
+      ],
+      build:(v) => {
+        if(v.encryption === 'nopass') return `WIFI:T:nopass;S:${esc(v.ssid)};H:${v.hidden ? 'true':'false'};;`;
+        return `WIFI:T:${v.encryption || 'WPA'};S:${esc(v.ssid)};P:${esc(v.password)};H:${v.hidden ? 'true':'false'};;`;
+      }
+    },
+    {
+      id:'vcard', label:'Contact',
+      icon: icon('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10.5" r="2.2"/><path d="M5.5 17c.8-2 2.3-3 3.5-3s2.7 1 3.5 3M14 9h5M14 13h5"/>'),
+      rows:[['firstName','lastName'],['org','title']],
+      fields:[
+        { id:'firstName', type:'text', label:'First name', placeholder:'Ada' },
+        { id:'lastName', type:'text', label:'Last name', placeholder:'Lovelace' },
+        { id:'org', type:'text', label:'Company', placeholder:'' },
+        { id:'title', type:'text', label:'Job title', placeholder:'' },
+        { id:'phone', type:'tel', label:'Phone', placeholder:'' },
+        { id:'email', type:'email', label:'Email', placeholder:'' },
+        { id:'website', type:'url', label:'Website', placeholder:'' },
+        { id:'address', type:'text', label:'Address', placeholder:'' }
+      ],
+      build:(v) => {
+        const lines = [
+          'BEGIN:VCARD','VERSION:3.0',
+          `N:${v.lastName || ''};${v.firstName || ''};;;`,
+          `FN:${[v.firstName, v.lastName].filter(Boolean).join(' ')}`,
+          v.org ? `ORG:${v.org}` : '',
+          v.title ? `TITLE:${v.title}` : '',
+          v.phone ? `TEL:${v.phone}` : '',
+          v.email ? `EMAIL:${v.email}` : '',
+          v.website ? `URL:${v.website}` : '',
+          v.address ? `ADR:;;${v.address};;;;` : '',
+          'END:VCARD'
+        ];
+        return lines.filter(Boolean).join('\n');
+      }
+    },
+    {
+      id:'social', label:'Social',
+      icon: icon('<circle cx="12" cy="12" r="9"/><path d="M15.5 9.5a3.5 3.5 0 1 0 0.9 4.6"/><path d="M15.5 9.5v3.2a1.8 1.8 0 0 0 3.5 0V12"/>'),
+      fields:[
+        { id:'platform', type:'select', label:'Platform', options:[
+            ['instagram','Instagram'],['x','X (Twitter)'],['tiktok','TikTok'],
+            ['facebook','Facebook'],['linkedin','LinkedIn'],['youtube','YouTube'],['other','Custom link']
+          ], default:'instagram' },
+        { id:'handle', type:'text', label:'Username or link', placeholder:'yourhandle' }
+      ],
+      build:(v) => {
+        const h = (v.handle || '').trim().replace(/^@/, '');
+        if(!h) return '';
+        if(v.platform === 'other' || /^https?:\/\//i.test(h)) return h;
+        const bases = {
+          instagram:'https://instagram.com/', x:'https://x.com/', tiktok:'https://tiktok.com/@',
+          facebook:'https://facebook.com/', linkedin:'https://linkedin.com/in/', youtube:'https://youtube.com/@'
+        };
+        return (bases[v.platform] || '') + h;
+      }
+    },
+    {
+      id:'location', label:'Location',
+      icon: icon('<path d="M12 21s7-6.3 7-11.5A7 7 0 0 0 5 9.5C5 14.7 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.3"/>'),
+      rows:[['lat','lng']],
+      fields:[
+        { id:'lat', type:'text', label:'Latitude', placeholder:'40.7128' },
+        { id:'lng', type:'text', label:'Longitude', placeholder:'-74.0060' }
+      ],
+      build:(v) => `geo:${(v.lat || '0').trim()},${(v.lng || '0').trim()}`
+    }
+  ];
+
+  function getConfig(id){
+    return TYPE_CONFIGS.find(t => t.id === id) || TYPE_CONFIGS[0];
+  }
+
+  function defaultsFor(id){
+    const cfg = getConfig(id);
+    const out = {};
+    cfg.fields.forEach(f => { out[f.id] = f.default !== undefined ? f.default : (f.type === 'checkbox' ? false : ''); });
+    return out;
+  }
+
+  window.QRTypes = { TYPE_CONFIGS, getConfig, defaultsFor };
+})();
+
+
+(function(){
+
+  let liveInstance = null;
+  let liveContainer = null;
+
+  function buildOptions(data, style, overrides){
+    overrides = overrides || {};
+    const size = overrides.size || style.size;
+    const opts = {
+      width: size,
+      height: size,
+      type: overrides.type || 'canvas',
+      data: data || ' ',
+      margin: style.margin,
+      qrOptions:{
+        errorCorrectionLevel: style.errorCorrection || 'Q'
+      },
+      dotsOptions:{
+        color: style.fgColor,
+        type: style.moduleStyle || 'square'
+      },
+      backgroundOptions:{
+        color: style.transparent ? 'rgba(0,0,0,0)' : style.bgColor
+      },
+      cornersSquareOptions:{
+        color: style.fgColor,
+        type: style.eyeFrameStyle || 'square'
+      },
+      cornersDotOptions:{
+        color: style.fgColor,
+        type: style.eyeDotStyle || 'square'
+      }
+    };
+    if(style.logo){
+      opts.image = style.logo;
+      opts.imageOptions = {
+        crossOrigin:'anonymous',
+        margin: 6,
+        imageSize: (style.logoSize || 28) / 100,
+        hideBackgroundDots: true
+      };
+    }
+    return opts;
+  }
+
+  function init(container, data, style){
+    liveContainer = container;
+    liveContainer.innerHTML = '';
+    liveInstance = new QRCodeStyling(buildOptions(data, style));
+    liveInstance.append(liveContainer);
+    return liveInstance;
+  }
+
+  function update(data, style){
+    if(!liveInstance){ return init(liveContainer, data, style); }
+    liveInstance.update(buildOptions(data, style));
+  }
+
+  function renderOffscreen(data, style, type, sizeOverride){
+    const holder = document.createElement('div');
+    holder.style.position = 'fixed';
+    holder.style.left = '-9999px';
+    holder.style.top = '0';
+    document.body.appendChild(holder);
+    const instance = new QRCodeStyling(buildOptions(data, style, { type, size: sizeOverride }));
+    instance.append(holder);
+    return { instance, holder };
+  }
+
+  function cleanup(holder){
+    if(holder && holder.parentNode) holder.parentNode.removeChild(holder);
+  }
+
+  async function downloadPNG(data, style, filename){
+    const { instance, holder } = renderOffscreen(data, style, 'canvas', Math.max(style.size, 640));
+    try{
+      await instance.download({ name: filename || 'qr-code', extension:'png' });
+    } finally {
+      cleanup(holder);
+    }
+  }
+
+  async function downloadSVG(data, style, filename){
+    const { instance, holder } = renderOffscreen(data, style, 'svg');
+    try{
+      await instance.download({ name: filename || 'qr-code', extension:'svg' });
+    } finally {
+      cleanup(holder);
+    }
+  }
+
+  function blobToDataURL(blob){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  async function getPNGDataURL(data, style, sizeOverride){
+    const { instance, holder } = renderOffscreen(data, style, 'canvas', sizeOverride || Math.max(style.size, 640));
+    try{
+      const raw = await instance.getRawData('png');
+      const blob = raw instanceof Blob ? raw : new Blob([raw], { type:'image/png' });
+      return await blobToDataURL(blob);
+    } finally {
+      cleanup(holder);
+    }
+  }
+
+  async function downloadPDF(data, style, filename){
+    const dataUrl = await getPNGDataURL(data, style, 900);
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation:'portrait', unit:'pt', format:'a4' });
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const imgSize = Math.min(pageW, pageH) * 0.6;
+    const x = (pageW - imgSize) / 2;
+    const y = (pageH - imgSize) / 2;
+    if(!style.transparent){
+      pdf.setFillColor(style.bgColor || '#ffffff');
+      pdf.rect(0, 0, pageW, pageH, 'F');
+    }
+    pdf.addImage(dataUrl, 'PNG', x, y, imgSize, imgSize);
+    pdf.save((filename || 'qr-code') + '.pdf');
+  }
+
+  async function print(data, style){
+    const dataUrl = await getPNGDataURL(data, style, 900);
+    const img = document.getElementById('printImage');
+    img.src = dataUrl;
+    await new Promise(res => { img.onload = res; });
+    window.print();
+  }
+
+  window.QREngine = { init, update, downloadPNG, downloadSVG, downloadPDF, print };
+})();
+
+
+(function(){
+  const { toast, debounce, saveState, loadState, saveTheme, loadTheme, copyToClipboard, normalizeHex } = window.QRUtils;
+  const { TYPE_CONFIGS, getConfig, defaultsFor } = window.QRTypes;
+
+  const MODULE_STYLES = [
+    ['square','Square', 0],['rounded','Rounded', 4],['dots','Dots', 9],
+    ['classy','Classy', 1],['classy-rounded','Classy round', 4],['extra-rounded','Extra round', 9]
+  ];
+  const EYE_FRAME_STYLES = [ ['square','Square',0], ['extra-rounded','Rounded',6], ['dot','Circle',9] ];
+  const EYE_DOT_STYLES = [ ['square','Square',0], ['dot','Circle',9] ];
+  const ERROR_LEVELS = [ ['L','L'], ['M','M'], ['Q','Q'], ['H','H'] ];
+
+  const defaultState = () => ({
+    activeType:'url',
+    values: Object.fromEntries(TYPE_CONFIGS.map(c => [c.id, defaultsFor(c.id)])),
+    style:{
+      fgColor:'#141414', bgColor:'#ffffff', transparent:false,
+      moduleStyle:'rounded', eyeFrameStyle:'extra-rounded', eyeDotStyle:'dot',
+      size:320, margin:16, errorCorrection:'Q',
+      logo:null, logoSize:28
+    }
+  });
+
+  let state = defaultState();
+  const saved = loadState();
+  if(saved && saved.values && saved.style){
+    
+    const base = defaultState();
+    state = {
+      activeType: saved.activeType && base.values[saved.activeType] ? saved.activeType : base.activeType,
+      values: Object.assign(base.values, saved.values),
+      style: Object.assign(base.style, saved.style)
+    };
+  }
+
+  const typeTabsEl = document.getElementById('typeTabs');
+  const formTitleEl = document.getElementById('formTitle');
+  const fieldsContainerEl = document.getElementById('fieldsContainer');
+  const qrHolder = document.getElementById('qrCanvasHolder');
+  const scannerEl = document.getElementById('scanner');
+
+  function renderTabs(){
+    typeTabsEl.innerHTML = '';
+    TYPE_CONFIGS.forEach(cfg => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'type-tab';
+      btn.setAttribute('role','tab');
+      btn.setAttribute('aria-selected', String(cfg.id === state.activeType));
+      btn.innerHTML = cfg.icon + '<span>' + cfg.label + '</span>';
+      btn.addEventListener('click', () => {
+        if(state.activeType === cfg.id) return;
+        state.activeType = cfg.id;
+        renderTabs();
+        renderFields();
+        scheduleUpdate();
+        persist();
+      });
+      typeTabsEl.appendChild(btn);
+    });
+  }
+
+  function renderFields(){
+    const cfg = getConfig(state.activeType);
+    formTitleEl.textContent = cfg.label;
+    fieldsContainerEl.innerHTML = '';
+
+    const rows = cfg.rows || [];
+    const paired = new Set(rows.flat());
+
+    rows.forEach(pair => {
+      const rowEl = document.createElement('div');
+      rowEl.className = 'field-row';
+      pair.forEach(fid => {
+        const field = cfg.fields.find(f => f.id === fid);
+        if(field) rowEl.appendChild(buildFieldEl(cfg, field));
+      });
+      fieldsContainerEl.appendChild(rowEl);
+    });
+
+    cfg.fields.forEach(field => {
+      if(paired.has(field.id)) return;
+      fieldsContainerEl.appendChild(buildFieldEl(cfg, field));
+    });
+  }
+
+  function buildFieldEl(cfg, field){
+    const wrap = document.createElement('div');
+    const val = state.values[cfg.id][field.id];
+
+    if(field.type === 'checkbox'){
+      wrap.className = 'field';
+      const label = document.createElement('label');
+      label.className = 'checkbox-inline';
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.checked = !!val;
+      input.addEventListener('change', () => {
+        state.values[cfg.id][field.id] = input.checked;
+        scheduleUpdate(); persist();
+      });
+      label.appendChild(input);
+      label.appendChild(document.createTextNode(field.label));
+      wrap.appendChild(label);
+      return wrap;
+    }
+
+    wrap.className = 'field';
+    const label = document.createElement('label');
+    label.textContent = field.label;
+    label.htmlFor = 'f_' + cfg.id + '_' + field.id;
+    wrap.appendChild(label);
+
+    let input;
+    if(field.type === 'textarea'){
+      input = document.createElement('textarea');
+    } else if(field.type === 'select'){
+      input = document.createElement('select');
+      field.options.forEach(([optVal, optLabel]) => {
+        const o = document.createElement('option');
+        o.value = optVal; o.textContent = optLabel;
+        input.appendChild(o);
+      });
+    } else {
+      input = document.createElement('input');
+      input.type = field.type;
+    }
+    input.id = 'f_' + cfg.id + '_' + field.id;
+    if(field.placeholder) input.placeholder = field.placeholder;
+    input.value = val || '';
+
+    const handler = () => {
+      state.values[cfg.id][field.id] = input.value;
+      scheduleUpdate(); persist();
+    };
+    input.addEventListener('input', handler);
+    if(field.type === 'select') input.addEventListener('change', handler);
+
+    wrap.appendChild(input);
+    return wrap;
+  }
+
+  function glyphSVG(rx){
+    const cell = (x,y) => `<rect x="${x}" y="${y}" width="9" height="9" rx="${rx}"/>`;
+    return `<svg viewBox="0 0 22 22" width="22" height="22" fill="currentColor">${cell(0,0)}${cell(13,0)}${cell(0,13)}${cell(13,13)}</svg>`;
+  }
+  function glyphSingle(rx){
+    return `<svg viewBox="0 0 22 22" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="18" height="18" rx="${rx}"/></svg>`;
+  }
+
+  function renderSwatchGroup(containerId, options, currentValue, glyphFn, onSelect){
+    const el = document.getElementById(containerId);
+    el.innerHTML = '';
+    options.forEach(opt => {
+      const [value, label, rx] = opt;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'swatch';
+      btn.setAttribute('aria-pressed', String(value === currentValue));
+      btn.innerHTML = `<span class="swatch__glyph">${glyphFn(rx)}</span><span class="swatch__label">${label}</span>`;
+      btn.addEventListener('click', () => {
+        onSelect(value);
+        [...el.children].forEach(c => c.setAttribute('aria-pressed','false'));
+        btn.setAttribute('aria-pressed','true');
+        pulseScan();
+        scheduleUpdate(); persist();
+      });
+      el.appendChild(btn);
+    });
+  }
+
+  function renderStyleControls(){
+    renderSwatchGroup('moduleStyleGroup', MODULE_STYLES, state.style.moduleStyle, glyphSVG, v => state.style.moduleStyle = v);
+    renderSwatchGroup('eyeFrameGroup', EYE_FRAME_STYLES, state.style.eyeFrameStyle, glyphSingle, v => state.style.eyeFrameStyle = v);
+    renderSwatchGroup('eyeDotGroup', EYE_DOT_STYLES, state.style.eyeDotStyle, glyphSingle, v => state.style.eyeDotStyle = v);
+    renderSwatchGroup('errorCorrectionGroup', ERROR_LEVELS, state.style.errorCorrection, () => '', v => state.style.errorCorrection = v);
+  
+    document.querySelectorAll('#errorCorrectionGroup .swatch').forEach((btn, i) => {
+      btn.querySelector('.swatch__glyph').innerHTML = `<strong style="font-family:var(--font-mono);font-size:15px">${ERROR_LEVELS[i][0]}</strong>`;
+      btn.querySelector('.swatch__label').remove();
+    });
+  }
+
+  function wireColorField(colorInputId, hexInputId, key){
+    const colorInput = document.getElementById(colorInputId);
+    const hexInput = document.getElementById(hexInputId);
+    colorInput.value = state.style[key];
+    hexInput.value = state.style[key];
+
+    colorInput.addEventListener('input', () => {
+      state.style[key] = colorInput.value;
+      hexInput.value = colorInput.value;
+      scheduleUpdate(); persist();
+    });
+    hexInput.addEventListener('input', () => {
+      const normalized = normalizeHex(hexInput.value);
+      if(normalized){
+        state.style[key] = normalized;
+        colorInput.value = normalized;
+        scheduleUpdate(); persist();
+      }
+    });
+  }
+
+  function wireLogo(){
+    const logoInput = document.getElementById('logoInput');
+    const uploadZone = document.getElementById('logoUpload');
+    const emptyState = document.getElementById('logoEmptyState');
+    const filledState = document.getElementById('logoFilledState');
+    const previewImg = document.getElementById('logoPreviewImg');
+    const removeBtn = document.getElementById('logoRemoveBtn');
+    const sizeRow = document.getElementById('logoSizeRow');
+    const sizeInput = document.getElementById('logoSize');
+    const sizeValue = document.getElementById('logoSizeValue');
+
+    function reflectLogoUI(){
+      const has = !!state.style.logo;
+      emptyState.hidden = has;
+      filledState.hidden = !has;
+      sizeRow.hidden = !has;
+      if(has) previewImg.src = state.style.logo;
+    }
+
+    uploadZone.addEventListener('click', (e) => {
+      if(e.target === removeBtn) return;
+      logoInput.click();
+    });
+
+    logoInput.addEventListener('change', () => {
+      const file = logoInput.files && logoInput.files[0];
+      if(!file) return;
+      if(file.size > 3 * 1024 * 1024){
+        toast('Please choose an image under 3 MB', 'error');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        state.style.logo = reader.result;
+        if(state.style.errorCorrection === 'L' || state.style.errorCorrection === 'M'){
+          state.style.errorCorrection = 'H';
+          renderStyleControls();
+        }
+        reflectLogoUI();
+        pulseScan();
+        scheduleUpdate(); persist();
+      };
+      reader.readAsDataURL(file);
+    });
+
+    removeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      state.style.logo = null;
+      logoInput.value = '';
+      reflectLogoUI();
+      scheduleUpdate(); persist();
+    });
+
+    sizeInput.value = state.style.logoSize;
+    sizeValue.textContent = state.style.logoSize + '%';
+    sizeInput.addEventListener('input', () => {
+      state.style.logoSize = Number(sizeInput.value);
+      sizeValue.textContent = state.style.logoSize + '%';
+      scheduleUpdate(); persist();
+    });
+
+    reflectLogoUI();
+  }
+
+  function wireSizeMargin(){
+    const sizeInput = document.getElementById('qrSize');
+    const sizeValue = document.getElementById('qrSizeValue');
+    const marginInput = document.getElementById('qrMargin');
+    const marginValue = document.getElementById('qrMarginValue');
+    const transparentInput = document.getElementById('transparentBg');
+    const bgColorInput = document.getElementById('bgColor');
+    const bgColorHex = document.getElementById('bgColorHex');
+
+    sizeInput.value = state.style.size;
+    sizeValue.textContent = state.style.size + ' px';
+    sizeInput.addEventListener('input', () => {
+      state.style.size = Number(sizeInput.value);
+      sizeValue.textContent = state.style.size + ' px';
+      scheduleUpdate(); persist();
+    });
+
+    marginInput.value = state.style.margin;
+    marginValue.textContent = state.style.margin + ' px';
+    marginInput.addEventListener('input', () => {
+      state.style.margin = Number(marginInput.value);
+      marginValue.textContent = state.style.margin + ' px';
+      scheduleUpdate(); persist();
+    });
+
+    transparentInput.checked = state.style.transparent;
+    transparentInput.addEventListener('change', () => {
+      state.style.transparent = transparentInput.checked;
+      bgColorInput.disabled = transparentInput.checked;
+      bgColorHex.disabled = transparentInput.checked;
+      scheduleUpdate(); persist();
+    });
+    bgColorInput.disabled = state.style.transparent;
+    bgColorHex.disabled = state.style.transparent;
+  }
+
+  function wireAccordion(){
+    document.querySelectorAll('.accordion__item').forEach(item => {
+      const trigger = item.querySelector('.accordion__trigger');
+      trigger.addEventListener('click', () => {
+        const isOpen = item.getAttribute('data-open') === 'true';
+        item.setAttribute('data-open', String(!isOpen));
+        trigger.setAttribute('aria-expanded', String(!isOpen));
+      });
+    });
+  }
+
+  function wireTheme(){
+    const btn = document.getElementById('themeToggle');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const stored = loadTheme();
+    const theme = stored || (prefersDark ? 'dark' : 'light');
+    applyTheme(theme);
+    btn.addEventListener('click', () => {
+      const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+      saveTheme(next);
+    });
+  }
+  function applyTheme(theme){
+    document.documentElement.setAttribute('data-theme', theme);
+    document.getElementById('themeToggle').setAttribute('aria-pressed', String(theme === 'dark'));
+  }
+
+  function currentData(){
+    const cfg = getConfig(state.activeType);
+    return cfg.build(state.values[state.activeType]);
+  }
+
+  function pulseScan(){
+    scannerEl.classList.remove('is-scanning');
+    void scannerEl.offsetWidth;
+    scannerEl.classList.add('is-scanning');
+  }
+
+  const scheduleUpdate = debounce(() => {
+    const data = currentData();
+    QREngine.update(data, state.style);
+    pulseScan();
+  }, 90);
+
+  function persist(){
+    persistDebounced();
+  }
+  const persistDebounced = debounce(() => saveState(state), 400);
+
+  function wireActions(){
+    document.getElementById('copyBtn').addEventListener('click', async () => {
+      const data = currentData();
+      if(!data.trim()){ toast('Nothing to copy yet', 'error'); return; }
+      try{
+        await copyToClipboard(data);
+        const btn = document.getElementById('copyBtn');
+        const label = document.getElementById('copyBtnLabel');
+        btn.classList.add('is-copied');
+        const prev = label.textContent;
+        label.textContent = 'Copied!';
+        setTimeout(() => { btn.classList.remove('is-copied'); label.textContent = prev; }, 1600);
+        toast('Content copied to clipboard', 'success');
+      }catch(e){
+        toast('Could not copy — try selecting manually', 'error');
+      }
+    });
+
+    document.getElementById('downloadPngBtn').addEventListener('click', async () => {
+      try{ await QREngine.downloadPNG(currentData(), state.style, 'qr-studio'); toast('PNG downloaded', 'success'); }
+      catch(e){ toast('Download failed — please try again', 'error'); }
+    });
+    document.getElementById('downloadSvgBtn').addEventListener('click', async () => {
+      try{ await QREngine.downloadSVG(currentData(), state.style, 'qr-studio'); toast('SVG downloaded', 'success'); }
+      catch(e){ toast('Download failed — please try again', 'error'); }
+    });
+    document.getElementById('downloadPdfBtn').addEventListener('click', async () => {
+      try{ await QREngine.downloadPDF(currentData(), state.style, 'qr-studio'); toast('PDF downloaded', 'success'); }
+      catch(e){ toast('Download failed — please try again', 'error'); }
+    });
+    document.getElementById('printBtn').addEventListener('click', async () => {
+      try{ await QREngine.print(currentData(), state.style); }
+      catch(e){ toast('Could not prepare print preview', 'error'); }
+    });
+
+    document.getElementById('newQrBtn').addEventListener('click', () => {
+      state.values[state.activeType] = defaultsFor(state.activeType);
+      renderFields();
+      scheduleUpdate(); persist();
+      toast('Ready for a new QR code', 'success');
+      window.scrollTo({ top: document.getElementById('generator').offsetTop - 90, behavior:'smooth' });
+    });
+  }
+
+  function init(){
+    wireTheme();
+    renderTabs();
+    renderFields();
+    renderStyleControls();
+    wireColorField('fgColor','fgColorHex','fgColor');
+    wireColorField('bgColor','bgColorHex','bgColor');
+    wireSizeMargin();
+    wireLogo();
+    wireAccordion();
+    wireActions();
+
+    QREngine.init(qrHolder, currentData(), state.style);
+    pulseScan();
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+})();
+
+</script>
+</body>
+</html>
