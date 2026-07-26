@@ -10,7 +10,7 @@ Customize your QR code, preview changes instantly, and download it in high quali
 
 Try Qrio here:
 
-https://your-username.github.io/qrio/
+https://vampriyad.github.io/QRIO/
 
 ## ✨ Features
 
@@ -32,10 +32,34 @@ https://your-username.github.io/qrio/
 - CSS
 - JavaScript
 
-## 📄 License
 
-This project is licensed under the MIT License.
 
-## 👨‍💻 Author
+## 📜 Copyright
 
-Made with ❤️ by Riyad.
+
+
+This project, including its source code, website design, and other content, is protected by copyright.
+
+
+
+No part of this project may be copied, modified, distributed, or reused without prior written permission from the author.
+
+
+
+## ❤️ Thank You
+
+
+
+Thank you for visiting this project and supporting my work. I hope you enjoy using **Compute** and find it helpful for your daily calculations.
+
+
+
+If you like the project, consider giving the repository a ⭐.
+
+
+
+---
+
+
+
+**© 2026 Riyad. All Rights Reserved.**
